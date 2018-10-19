@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.6.2/workbox-sw.js");
 
 importScripts(
-  "/cstst.github.io/d3-heat-map/precache-manifest.6e374c710343e76476f0c052d2931e8e.js"
+  "/d3-heat-map/precache-manifest.98a35a3aac10e6fcfae89e40bfcbae13.js"
 );
 
 workbox.clientsClaim();
@@ -28,7 +28,7 @@ self.__precacheManifest = [].concat(self.__precacheManifest || []);
 workbox.precaching.suppressWarnings();
 workbox.precaching.precacheAndRoute(self.__precacheManifest, {});
 
-workbox.routing.registerNavigationRoute("/cstst.github.io/d3-heat-map/index.html", {
+workbox.routing.registerNavigationRoute("/d3-heat-map/index.html", {
   
   blacklist: [/^\/_/,/\/[^\/]+\.[^\/]+$/],
 });

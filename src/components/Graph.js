@@ -12,7 +12,7 @@ export default class Graph extends Component {
   drawHeatMap({ monthlyVariance, baseTemperature }) {
     const height = 600,
           width = 1500,
-          margin = {top: 60, right: 30, bottom: 150, left: 60},
+          margin = {top: 60, right: 30, bottom: 140, left: 120},
           years = monthlyVariance.map(yearData => yearData.year),
           temps = monthlyVariance.map(yearData => yearData.variance),
           tempDif = (d3.max(temps) - d3.min(temps)) / 11,
@@ -45,15 +45,18 @@ export default class Graph extends Component {
        .data(monthlyVariance)
        .enter()
        .append('rect')
-       .attr('class', 'rect')
+       .attr('class', 'cell')
        .attr('height', (height - (margin.top + margin.bottom)) / 12)
        .attr('width', width / (d3.max(years) - d3.min(years)))
        .attr('x', d => xScale(d.year))
        .attr('y', d => yScale(d.month))
-       .attr('month', d => monthScale(d.month))
+       .attr('data-month', d => d.month)
+       .attr('data-year', d => d.year)
+       .attr('data-temp', d => d.variance + baseTemperature)
        .style('fill', d => colorScale(d.variance))
        .on('mouseover', (d, i) => {
           tooltip.text(`${monthScale(d.month)} ${d.year}\n${(Math.round((baseTemperature + d.variance) * 10) / 10)}°C\n${d.variance > 0 ? '+' : ''}${(Math.round(d.variance * 10) / 10)}°C`)
+                 .attr('data-year', d.year)
                  .style("visibility", "visible")
         })
       .on("mousemove", () => {
@@ -69,21 +72,37 @@ export default class Graph extends Component {
        .attr('transform', `translate(${margin.left}, 0)`)
        .call(yAxis);
        
+    svg.append("text")
+       .attr('id', 'y-axis-label')
+       .attr("transform", "rotate(-90)")
+       .attr("x", (height / 2) * -1)
+       .attr("y", margin.left / 2)
+       .text("Month")
+       
     svg.append('g')
        .attr('transform', `translate(0, ${height - margin.bottom})`)
        .attr('id', 'x-axis')
        .call(xAxis);
 
+    svg.append("text")
+       .attr('id', 'x-axis-label')
+       .attr("x", width / 2)
+       .attr("y", height - (margin.bottom / 1.5))
+       .text("Year") 
+
+
     svg.append('text')
-       .attr('x', width / 3)
+       .attr('x', width / 2)
        .attr('y', margin.top / 2)
        .attr('id', 'title')
+       .style("text-anchor", "middle")
        .text('Monthly Global Land-Surface Temperature')
     
     svg.append('text')
-       .attr('x', (width / 3) + 60)
+       .attr('x', (width / 2))
        .attr('y', margin.top / 1.2)
-       .attr('id', 'subtitle')
+       .attr('id', 'description')
+       .style("text-anchor", "middle")
        .text('1753-2015: Base Temperature 8.66℃');
     
     const legendColorVals = [],
@@ -94,7 +113,6 @@ export default class Graph extends Component {
         legendTickVals.push(d3.min(temps) + (tempDif * i));
       }   
     }
-    console.log(legendTickVals)
     const legend = svg.append('g')
                       .attr('id', 'legend')
 
@@ -103,9 +121,9 @@ export default class Graph extends Component {
           .enter()
           .append('rect')
           .attr('x', (d, i) => margin.left + (40 * i))
-          .attr('y', height - (margin.bottom / 2))
+          .attr('y', height - (margin.bottom / 1.5))
           .attr('val', d => d)
-          .attr('class', 'legend-rect')
+          .attr('class', 'legend-cell')
           .attr('width', 40)
           .attr('height', 40)
           .style('fill', d => colorScale(d));
@@ -116,11 +134,18 @@ export default class Graph extends Component {
 
     const legendAxis = d3.axisBottom(legendScale)
                          .tickValues(legendTickVals)
-                         .tickFormat( n => (n > 0 ? '+' : '') + (Math.round(n * 10) / 10) + '°');    
+                         .tickFormat( n => (n > 0 ? '+' : '') + (Math.round(n * 10) / 10));    
     legend.append("g")
           .attr('id', 'legend-axis')
-          .attr("transform", `translate(0, ${height - (margin.bottom / 2) + 39})`)
+          .attr("transform", `translate(0, ${height - (margin.bottom / 1.5) + 39})`)
           .call(legendAxis);
+
+    legend.append("text")
+          .attr('id', 'legend-axis-label')
+          .attr("x", margin.left + 220)
+          .attr("y", height - (margin.bottom / 1.5) + 80)
+          .style("text-anchor", "middle")
+          .text("Variance from Base Temperature (°C)")
     
 
 

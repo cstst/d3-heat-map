@@ -19,14 +19,14 @@
   font-size: 1.25em;
 }
 
-.rect:hover {
+.cell:hover {
   stroke: black;
   stroke-width: 1;
 }
 
 
 
-.legend-rect {
+.legend-cell {
   stroke: black;
   stroke-width: 1;
 }

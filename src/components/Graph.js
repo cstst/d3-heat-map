@@ -5,48 +5,72 @@ export default class Graph extends Component {
   async componentDidMount() {
     const data = await fetch('https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/global-temperature.json')
       .then(res => res.json())
-    console.log(data);
     this.drawHeatMap(data);
   }
 
   drawHeatMap({ monthlyVariance, baseTemperature }) {
-    const height = 600,
-          width = 1500,
-          margin = {top: 60, right: 30, bottom: 140, left: 120},
-          years = monthlyVariance.map(yearData => yearData.year),
-          temps = monthlyVariance.map(yearData => yearData.variance),
-          tempDif = (d3.max(temps) - d3.min(temps)) / 11,
-          cellHeight = (height - (margin.top + margin.bottom)) / 12,
-          cellWidth =  (width - (margin.left + margin.right)) / (d3.max(years) - d3.min(years)), 
-          svg = d3.select('#graph')
+    const height = 600;
+    const width = 1500;
+    const margin = { top: 60, right: 30, bottom: 140, left: 120 };
+
+    const svg = d3.select('#graph')
                   .append('svg')
                   .attr('height', height)
-                  .attr('width', width),
-          xScale = d3.scaleLinear()
+                  .attr('width', width);
+
+    const years = monthlyVariance.map(yearData => yearData.year);
+    const temps = monthlyVariance.map(yearData => yearData.variance);
+    const tempDif = (d3.max(temps) - d3.min(temps)) / 11;
+
+    const xScale = d3.scaleLinear()
                      .domain([d3.min(years), d3.max(years)])
-                     .range([margin.left, width - margin.right]),
-          yScale = d3.scaleLinear()
+                     .range([margin.left, width - margin.right]);
+
+    const yScale = d3.scaleLinear()
                      .domain([1, 13])
-                     .range([margin.top, height - margin.bottom]),
-          yAxisScale = d3.scaleLinear()
-                     .domain([.5, 12.5])
-                     .range([margin.top, height - margin.bottom]),
-          colorScale = d3.scaleQuantize()
+                     .range([margin.top, height - margin.bottom]);
+     
+    const colors = [
+      "#5E4FA2", 
+      "#3288BD", 
+      "#66C2A5", 
+      "#ABDDA4", 
+      "#E6F598", 
+      "#FFFFBF", 
+      "#FEE08B", 
+      "#FDAE61", 
+      "#F46D43", 
+      "#D53E4F", 
+      "#9E0142"
+    ];                 
+    const colorScale = d3.scaleQuantize()
                      .domain([d3.min(temps), d3.max(temps)])
-                     .range(["#5E4FA2", "#3288BD", "#66C2A5", "#ABDDA4", "#E6F598", "#FFFFBF", "#FEE08B", "#FDAE61", "#F46D43", "#D53E4F", "#9E0142"]),
-          monthScale = d3.scaleQuantize()
+                     .range(colors);
+
+    const months = [
+      'January', 
+      'February', 
+      'March', 
+      'April', 
+      'May', 
+      'June', 
+      'July', 
+      'August', 
+      'September', 
+      'October', 
+      'November', 
+      'December'
+    ];                 
+    const monthScale = d3.scaleQuantize()
                           .domain([1, 12])
-                          .range(['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']),
-          xAxis = d3.axisBottom(xScale)
-                    .tickValues(d3.range(1760, 2015, 10))
-                    .tickSizeOuter(0)
-                    .tickFormat(d3.format('d')),
-          yAxis = d3.axisLeft(yAxisScale)
-                    .tickSizeOuter(0)
-                    .tickFormat(d => monthScale(d)),
-          tooltip = d3.select("#graph")
+                          .range(months);
+                    
+    const cellHeight = (height - (margin.top + margin.bottom)) / 12;
+    const cellWidth =  (width - (margin.left + margin.right)) / (d3.max(years) - d3.min(years));
+
+    const tooltip = d3.select("#graph")
                       .append("div")
-                      .attr("id", "tooltip")
+                      .attr("id", "tooltip");        
 
     svg.selectAll('rect')
        .data(monthlyVariance)
@@ -74,6 +98,14 @@ export default class Graph extends Component {
           tooltip.style("visibility", "hidden")
         });
 
+    const yAxisScale = d3.scaleLinear()
+                         .domain([.5, 12.5])
+                         .range([margin.top, height - margin.bottom]);
+
+    const yAxis = d3.axisLeft(yAxisScale)
+                    .tickSizeOuter(0)
+                    .tickFormat(d => monthScale(d));
+
     svg.append('g')
        .attr('id', 'y-axis')
        .attr('transform', `translate(${margin.left}, 0)`)
@@ -86,6 +118,11 @@ export default class Graph extends Component {
        .attr("y", margin.left / 2)
        .text("Month")
        
+    const xAxis = d3.axisBottom(xScale)
+                    .tickValues(d3.range(1760, 2015, 10))
+                    .tickSizeOuter(0)
+                    .tickFormat(d3.format('d'));   
+
     svg.append('g')
        .attr('id', 'x-axis')
        .attr('transform', `translate(0, ${height - margin.bottom})`)
@@ -110,27 +147,14 @@ export default class Graph extends Component {
        .attr('y', margin.top / 1.2)
        .style("text-anchor", "middle")
        .text('1753-2015: Base Temperature 8.66°C');
-    /*
-    svg.append('rect')
-       .attr('height', height - margin.top - margin.bottom)
-       .attr('width', width - margin.left - margin.right + cellWidth)
-       .attr('x', margin.left)
-       .attr('y',  margin.top)
-       .style('stroke', 'black')
-       .style('stroke-width', 1)
-       .style('fill', 'none')
-    */
-
-    const legendColorVals = [],
-          legendTickVals = [];
-    for (let i = 0; i < 11; i++) {
-      legendColorVals.push(d3.min(temps) + ((tempDif * i) + (tempDif / 2)));
-      if (i > 0) {
-        legendTickVals.push(d3.min(temps) + (tempDif * i));
-      }   
-    }
+       
     const legend = svg.append('g')
                       .attr('id', 'legend')
+
+    const legendColorVals = [];
+    for (let i = 0; i < 11; i++) {
+      legendColorVals.push(d3.min(temps) + ((tempDif * i) + (tempDif / 2)));
+    }
 
     legend.selectAll('rect')
           .data(legendColorVals)
@@ -143,6 +167,11 @@ export default class Graph extends Component {
           .attr('width', 40)
           .attr('height', 40)
           .style('fill', d => colorScale(d));
+
+    const legendTickVals = []
+    for (let i = 1; i < 11; i++) {
+      legendTickVals.push(d3.min(temps) + (tempDif * i));
+    }
     
     const legendScale = d3.scaleLinear()
                           .domain([legendTickVals[0], legendTickVals[legendTickVals.length - 1]])
@@ -162,15 +191,11 @@ export default class Graph extends Component {
           .attr("y", height - (margin.bottom / 1.5) + 80)
           .style("text-anchor", "middle")
           .text("Variance from Base Temperature (°C)")
-    
-
-
   }
   
   render() {
     return (
-      <div id="graph">
-      </div>
+      <div id="graph" />
     )
   }
 }

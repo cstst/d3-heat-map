@@ -19,6 +19,8 @@
   font-size: 1.25em;
 }
 
+
+
 .cell:hover {
   stroke: black;
   stroke-width: 1;

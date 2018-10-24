@@ -16,6 +16,8 @@ export default class Graph extends Component {
           years = monthlyVariance.map(yearData => yearData.year),
           temps = monthlyVariance.map(yearData => yearData.variance),
           tempDif = (d3.max(temps) - d3.min(temps)) / 11,
+          cellHeight = (height - (margin.top + margin.bottom)) / 12,
+          cellWidth =  (width - (margin.left + margin.right)) / (d3.max(years) - d3.min(years)), 
           svg = d3.select('#graph')
                   .append('svg')
                   .attr('height', height)
@@ -26,16 +28,21 @@ export default class Graph extends Component {
           yScale = d3.scaleLinear()
                      .domain([1, 13])
                      .range([margin.top, height - margin.bottom]),
+          yAxisScale = d3.scaleLinear()
+                     .domain([.5, 12.5])
+                     .range([margin.top, height - margin.bottom]),
           colorScale = d3.scaleQuantize()
                      .domain([d3.min(temps), d3.max(temps)])
                      .range(["#5E4FA2", "#3288BD", "#66C2A5", "#ABDDA4", "#E6F598", "#FFFFBF", "#FEE08B", "#FDAE61", "#F46D43", "#D53E4F", "#9E0142"]),
           monthScale = d3.scaleQuantize()
-                          .domain([1, 13])
-                          .range(['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', '']),
+                          .domain([1, 12])
+                          .range(['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']),
           xAxis = d3.axisBottom(xScale)
                     .tickValues(d3.range(1760, 2015, 10))
+                    .tickSizeOuter(0)
                     .tickFormat(d3.format('d')),
-          yAxis = d3.axisLeft(yScale)
+          yAxis = d3.axisLeft(yAxisScale)
+                    .tickSizeOuter(0)
                     .tickFormat(d => monthScale(d)),
           tooltip = d3.select("#graph")
                       .append("div")
@@ -46,8 +53,8 @@ export default class Graph extends Component {
        .enter()
        .append('rect')
        .attr('class', 'cell')
-       .attr('height', (height - (margin.top + margin.bottom)) / 12)
-       .attr('width', width / (d3.max(years) - d3.min(years)))
+       .attr('height', cellHeight)
+       .attr('width',cellWidth)
        .attr('x', d => xScale(d.year))
        .attr('y', d => yScale(d.month))
        .attr('data-month', d => d.month)
@@ -59,13 +66,13 @@ export default class Graph extends Component {
                  .attr('data-year', d.year)
                  .style("visibility", "visible")
         })
-      .on("mousemove", () => {
-        tooltip.style("top", (d3.event.pageY - 100)+"px")
-               .style("left",(d3.event.pageX - 40)+"px");
-      })
-      .on("mouseout", () => {
-        tooltip.style("visibility", "hidden")
-      });
+        .on("mousemove", () => {
+          tooltip.style("top", (d3.event.pageY - 100)+"px")
+                 .style("left",(d3.event.pageX - 40)+"px");
+        })
+        .on("mouseout", () => {
+          tooltip.style("visibility", "hidden")
+        });
 
     svg.append('g')
        .attr('id', 'y-axis')
@@ -80,8 +87,8 @@ export default class Graph extends Component {
        .text("Month")
        
     svg.append('g')
-       .attr('transform', `translate(0, ${height - margin.bottom})`)
        .attr('id', 'x-axis')
+       .attr('transform', `translate(0, ${height - margin.bottom})`)
        .call(xAxis);
 
     svg.append("text")
@@ -90,21 +97,30 @@ export default class Graph extends Component {
        .attr("y", height - (margin.bottom / 1.5))
        .text("Year") 
 
-
     svg.append('text')
+       .attr('id', 'title')
        .attr('x', width / 2)
        .attr('y', margin.top / 2)
-       .attr('id', 'title')
        .style("text-anchor", "middle")
        .text('Monthly Global Land-Surface Temperature')
     
     svg.append('text')
+       .attr('id', 'description')
        .attr('x', (width / 2))
        .attr('y', margin.top / 1.2)
-       .attr('id', 'description')
        .style("text-anchor", "middle")
-       .text('1753-2015: Base Temperature 8.66℃');
-    
+       .text('1753-2015: Base Temperature 8.66°C');
+    /*
+    svg.append('rect')
+       .attr('height', height - margin.top - margin.bottom)
+       .attr('width', width - margin.left - margin.right + cellWidth)
+       .attr('x', margin.left)
+       .attr('y',  margin.top)
+       .style('stroke', 'black')
+       .style('stroke-width', 1)
+       .style('fill', 'none')
+    */
+
     const legendColorVals = [],
           legendTickVals = [];
     for (let i = 0; i < 11; i++) {
@@ -154,7 +170,6 @@ export default class Graph extends Component {
   render() {
     return (
       <div id="graph">
-        
       </div>
     )
   }
